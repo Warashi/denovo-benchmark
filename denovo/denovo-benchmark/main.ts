@@ -4,12 +4,15 @@ import { calc } from "./statistical.ts";
 
 export function main(denovo: Denovo): void {
   denovo.dispatcher = {
+    async echo(...args: string[]): Promise<string[]> {
+      return args;
+    },
     async benchmark(
       size: string,
       count: string,
       n: string,
     ): Promise<string> {
-      const result = await benchmark(
+      const resultEval = await benchmark(
         parseInt(size),
         parseInt(count),
         parseInt(n),
@@ -19,7 +22,23 @@ export function main(denovo: Denovo): void {
           }
         },
       );
-      return result.join("\n");
+      const resultDispatch = await benchmark(
+        parseInt(size),
+        parseInt(count),
+        parseInt(n),
+        async () => {
+          for (let i = 0; i < parseInt(n); i++) {
+            await denovo.dispatch(denovo.name, "echo", "a", "b", "c");
+          }
+        },
+      );
+      return [
+        "eval:",
+        ...resultEval,
+        "\n",
+        "dispatch:",
+        ...resultDispatch,
+      ].join("\n");
     },
   };
 }
